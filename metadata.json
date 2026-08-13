@@ -1,0 +1,6 @@
+{
+  "name": "PDF & Media Converter Lab",
+  "description": "Secure neo-brutalist suite to edit, merge, split, compress, convert PDFs to PPT/JPG/Word, and convert video formats with high privacy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
