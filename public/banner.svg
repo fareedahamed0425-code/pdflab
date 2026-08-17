@@ -1,0 +1,52 @@
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.2)" />
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.05)" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="15" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bg)" rx="20"/>
+  
+  <g transform="translate(400, 200)">
+    <!-- Abstract Decorative Shapes -->
+    <circle cx="-180" cy="-80" r="60" fill="#FDE68A" opacity="0.4"/>
+    <rect x="120" y="50" width="80" height="80" rx="20" fill="#34D399" opacity="0.5" transform="rotate(25 160 90)"/>
+    
+    <!-- Central Glassmorphic Card -->
+    <rect x="-260" y="-120" width="520" height="240" rx="24" fill="url(#card-grad)" filter="url(#shadow)" stroke="rgba(255, 255, 255, 0.4)" stroke-width="2"/>
+    
+    <!-- PDF Icon -->
+    <g transform="translate(-160, -40)">
+      <rect width="70" height="90" rx="10" fill="#EF4444" filter="url(#shadow)"/>
+      <text x="15" y="45" font-family="system-ui, sans-serif" font-weight="900" font-size="22" fill="#FFFFFF">PDF</text>
+      <!-- Fold corner -->
+      <polygon points="50,0 70,0 70,20" fill="#FCA5A5"/>
+    </g>
+    
+    <!-- Transform Arrow Icon -->
+    <g transform="translate(-40, -10)">
+       <path d="M 0,-15 L 30,-15 L 30,-25 L 50,-5 L 30,15 L 30,5 L 0,5 Z" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+    
+    <!-- Media Icon -->
+    <g transform="translate(40, -40)">
+      <rect width="70" height="90" rx="10" fill="#3B82F6" filter="url(#shadow)"/>
+      <circle cx="35" cy="45" r="20" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+      <polygon points="30,35 30,55 45,45" fill="#FFFFFF"/>
+    </g>
+    
+    <!-- Title Text -->
+    <text x="0" y="75" font-family="system-ui, sans-serif" font-weight="800" font-size="34" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">PDF &amp; MEDIA</text>
+    <text x="0" y="110" font-family="system-ui, sans-serif" font-weight="600" font-size="20" fill="#E0E7FF" text-anchor="middle" letter-spacing="2">CONVERTER LAB</text>
+  </g>
+</svg>
