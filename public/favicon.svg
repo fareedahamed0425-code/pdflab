@@ -1,0 +1,17 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="25" fill="url(#grad)" />
+  
+  <!-- Document Shape -->
+  <path d="M35,20 L55,20 L75,40 L75,80 C75,85.5 70.5,90 65,90 L35,90 C29.5,90 25,85.5 25,80 L25,30 C25,24.5 29.5,20 35,20 Z" fill="#FFFFFF" />
+  <!-- Fold -->
+  <path d="M55,20 L55,40 L75,40 Z" fill="#E2E8F0" />
+  
+  <!-- Play Icon for Media -->
+  <path d="M43,48 L43,72 L61,60 Z" fill="#4F46E5" />
+</svg>
