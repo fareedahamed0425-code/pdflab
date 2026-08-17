@@ -2,6 +2,8 @@ import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Document, Paragraph, TextRun, ImageRun, Packer, HeadingLevel } from 'docx';
 import PptxGenJS from 'pptxgenjs';
+import JSZip from 'jszip';
+import mammoth from 'mammoth';
 import { Annotation, PdfPageMeta } from '../types';
 import { trackMemoryUsage } from './security';
 
@@ -364,6 +366,127 @@ export async function convertImagesToPdf(files: File[]): Promise<Uint8Array> {
         maxWidth: 500,
         lineHeight: 14,
       });
+    }
+  }
+
+  const bytes = await pdfDoc.save();
+  return bytes;
+}
+
+/**
+ * Helper to add text content split across pages
+ */
+async function addTextPagesToPdf(pdfDoc: PDFDocument, title: string, text: string) {
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontSize = 11;
+  const lineHeight = 14;
+  const margin = 50;
+  const maxWidth = 595.28 - margin * 2;
+  const maxHeight = 841.89 - margin * 2;
+  const maxLinesPerPage = Math.floor(maxHeight / lineHeight) - 4; // leave room for title
+
+  const rawLines = text.split('\n');
+  const wrappedLines: string[] = [];
+  
+  for(const rLine of rawLines) {
+    if(!rLine.trim()) { wrappedLines.push(''); continue; }
+    let currentLine = "";
+    const words = rLine.split(' ');
+    for(const word of words) {
+      const testLine = currentLine ? currentLine + ' ' + word : word;
+      const width = font.widthOfTextAtSize(testLine, fontSize);
+      if(width > maxWidth) {
+        wrappedLines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if(currentLine) wrappedLines.push(currentLine);
+  }
+
+  // Ensure at least one page if no text
+  if (wrappedLines.length === 0) wrappedLines.push("No text found.");
+
+  for (let i = 0; i < wrappedLines.length; i += maxLinesPerPage) {
+    const pageLines = wrappedLines.slice(i, i + maxLinesPerPage);
+    const page = pdfDoc.addPage([595.28, 841.89]);
+    
+    // Title
+    page.drawText(title + ` (Page ${Math.floor(i/maxLinesPerPage) + 1})`, {
+      x: margin,
+      y: 841.89 - margin,
+      size: 14,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    // Body
+    for (let j = 0; j < pageLines.length; j++) {
+      page.drawText(pageLines[j], {
+        x: margin,
+        y: 841.89 - margin - 30 - (j * lineHeight),
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0),
+      });
+    }
+  }
+}
+
+/**
+ * CONVERT Office Documents (DOCX, PPTX) to PDF (Text Extraction Only)
+ */
+export async function convertOfficeToPdf(files: File[]): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.create();
+
+  for (const file of files) {
+    const arrayBuffer = await file.arrayBuffer();
+    trackMemoryUsage(arrayBuffer.byteLength);
+
+    if (file.name.endsWith('.docx')) {
+      try {
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        await addTextPagesToPdf(pdfDoc, file.name, result.value);
+      } catch (err) {
+        console.error('Error parsing docx:', err);
+        await addTextPagesToPdf(pdfDoc, file.name, "Error reading document format.");
+      }
+    } else if (file.name.endsWith('.pptx') || file.name.endsWith('.ppt')) {
+      try {
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        let pptText = "";
+        
+        const slideFiles = Object.keys(zip.files).filter(name => 
+          name.startsWith('ppt/slides/slide') && name.endsWith('.xml')
+        );
+        
+        slideFiles.sort((a, b) => {
+          const matchA = a.match(/\d+/);
+          const matchB = b.match(/\d+/);
+          const numA = matchA ? parseInt(matchA[0]) : 0;
+          const numB = matchB ? parseInt(matchB[0]) : 0;
+          return numA - numB;
+        });
+
+        for (const slideName of slideFiles) {
+          const content = await zip.file(slideName)!.async('string');
+          // Match text nodes in PPTX XML
+          const textMatches = content.match(/<a:t>([^<]*)<\/a:t>/g);
+          if (textMatches) {
+             const slideText = textMatches.map(m => m.replace(/<[^>]+>/g, '')).join(' ');
+             const matchSlideNum = slideName.match(/\d+/);
+             const slideNum = matchSlideNum ? matchSlideNum[0] : '?';
+             pptText += `--- Slide ${slideNum} ---\n${slideText}\n\n`;
+          }
+        }
+        
+        await addTextPagesToPdf(pdfDoc, file.name, pptText || "No text could be extracted from this presentation.");
+      } catch (err) {
+        console.error('Error parsing pptx:', err);
+        await addTextPagesToPdf(pdfDoc, file.name, "Error reading presentation format.");
+      }
     }
   }
 

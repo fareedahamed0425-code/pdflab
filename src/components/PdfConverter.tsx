@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { RefreshCw, FileText, Download, Image as ImageIcon, Presentation, FileCode, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, FileText, Download, Image as ImageIcon, Presentation, FileCode, CheckCircle2, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { PdfTargetFormat, ProcessedResult } from '../types';
 import { 
   convertImagesToPdf, 
   convertPdfToImages, 
   convertPdfToPPT, 
-  convertPdfToWord 
+  convertPdfToWord,
+  convertOfficeToPdf
 } from '../utils/pdfEngine';
 import { FileUploader } from './FileUploader';
 import { formatBytes } from '../utils/security';
@@ -21,7 +22,29 @@ export const PdfConverter: React.FC<PdfConverterProps> = ({ onComplete }) => {
   const [isConverting, setIsConverting] = useState(false);
 
   const handleFilesSelected = (newFiles: File[]) => {
+    if (direction === 'other-to-pdf') {
+      setFiles((prev) => [...prev, ...newFiles]);
+    } else {
+      setFiles([newFiles[0]]);
+    }
+  };
+
+  const moveFileUp = (index: number) => {
+    if (index === 0) return;
+    const newFiles = [...files];
+    [newFiles[index - 1], newFiles[index]] = [newFiles[index], newFiles[index - 1]];
     setFiles(newFiles);
+  };
+
+  const moveFileDown = (index: number) => {
+    if (index === files.length - 1) return;
+    const newFiles = [...files];
+    [newFiles[index + 1], newFiles[index]] = [newFiles[index], newFiles[index + 1]];
+    setFiles(newFiles);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleConvert = async () => {
@@ -62,8 +85,20 @@ export const PdfConverter: React.FC<PdfConverterProps> = ({ onComplete }) => {
           }
         }
       } else {
-        // Converting Images/Text to PDF
-        const pdfBytes = await convertImagesToPdf(files);
+        // Converting Images/Text/Office to PDF
+        let pdfBytes: Uint8Array;
+        
+        // If files are office docs, we use the office to pdf converter
+        const isOfficeDoc = files.some(f => 
+          f.name.endsWith('.docx') || f.name.endsWith('.pptx') || f.name.endsWith('.ppt')
+        );
+        
+        if (isOfficeDoc) {
+          pdfBytes = await convertOfficeToPdf(files);
+        } else {
+          pdfBytes = await convertImagesToPdf(files);
+        }
+        
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         onComplete({
           blob,
@@ -120,7 +155,7 @@ export const PdfConverter: React.FC<PdfConverterProps> = ({ onComplete }) => {
                 : 'bg-slate-100'
             }`}
           >
-            IMAGES / TXT ➔ PDF
+            FILES (JPG, PPT, WORD) ➔ PDF
           </button>
         </div>
 
@@ -175,34 +210,108 @@ export const PdfConverter: React.FC<PdfConverterProps> = ({ onComplete }) => {
       {/* File Uploader */}
       {files.length === 0 ? (
         <FileUploader
-          accept={direction === 'pdf-to-other' ? 'application/pdf' : 'image/*,.txt'}
-          title={direction === 'pdf-to-other' ? 'UPLOAD PDF TO CONVERT' : 'UPLOAD IMAGES OR TXT'}
+          accept={direction === 'pdf-to-other' ? 'application/pdf' : 'image/*,.txt,.ppt,.pptx,.docx'}
+          title={direction === 'pdf-to-other' ? 'UPLOAD PDF TO CONVERT' : 'UPLOAD FILES (JPG, PPT, DOCX)'}
+          multiple={direction === 'other-to-pdf'}
           subtitle={
             direction === 'pdf-to-other'
               ? `Target Format: ${targetFormat.toUpperCase()}`
-              : 'Select JPG, PNG or TXT files to convert to PDF.'
+              : 'Select JPG, PNG, TXT, PPTX or DOCX files to convert to PDF.'
           }
           onFilesSelected={handleFilesSelected}
           iconType={direction === 'pdf-to-other' ? 'pdf' : 'image'}
         />
       ) : (
         <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4">
-          <div className="bg-amber-50 border-2 border-black p-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FileText className="w-6 h-6 text-black" />
-              <div>
-                <span className="font-bold text-sm block">{files[0].name}</span>
-                <span className="text-xs font-mono text-slate-600">{formatBytes(files[0].size)}</span>
+          {direction === 'pdf-to-other' ? (
+            <div className="bg-amber-50 border-2 border-black p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="w-6 h-6 text-black" />
+                <div>
+                  <span className="font-bold text-sm block truncate max-w-xs sm:max-w-md">{files[0]?.name}</span>
+                  <span className="text-xs font-mono text-slate-600">{formatBytes(files[0]?.size || 0)}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setFiles([])}
+                className="bg-slate-200 border border-black px-2 py-1 font-bold text-xs uppercase hover:bg-slate-300"
+              >
+                CHANGE FILE
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-black text-sm uppercase">SELECTED FILES ({files.length})</h3>
+                <div className="flex gap-2">
+                  <label className="cursor-pointer bg-[#FFE600] border-2 border-black px-3 py-1 font-bold text-xs uppercase hover:bg-amber-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    ADD MORE
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*,.txt,.ppt,.pptx,.docx" 
+                      onChange={(e) => {
+                        if (e.target.files) handleFilesSelected(Array.from(e.target.files));
+                        e.target.value = '';
+                      }} 
+                      className="hidden" 
+                    />
+                  </label>
+                  <button
+                    onClick={() => setFiles([])}
+                    className="bg-slate-200 border-2 border-black px-3 py-1 font-bold text-xs uppercase hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  >
+                    CLEAR ALL
+                  </button>
+                </div>
+              </div>
+              
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+                {files.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="bg-amber-50 border-2 border-black p-2 flex items-center justify-between">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      {file.type.includes('image') ? (
+                        <ImageIcon className="w-5 h-5 text-black shrink-0" />
+                      ) : (
+                        <FileText className="w-5 h-5 text-black shrink-0" />
+                      )}
+                      <div className="truncate">
+                        <span className="font-bold text-sm block truncate max-w-[150px] sm:max-w-xs">{file.name}</span>
+                        <span className="text-xs font-mono text-slate-600">{formatBytes(file.size)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => moveFileUp(index)}
+                        disabled={index === 0}
+                        className="p-1 border border-black disabled:opacity-30 hover:bg-slate-200 bg-white"
+                        title="Move Up"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => moveFileDown(index)}
+                        disabled={index === files.length - 1}
+                        className="p-1 border border-black disabled:opacity-30 hover:bg-slate-200 bg-white"
+                        title="Move Down"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="p-1 border border-black hover:bg-red-200 bg-[#FF0055] text-white"
+                        title="Remove"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <button
-              onClick={() => setFiles([])}
-              className="bg-slate-200 border border-black px-2 py-1 font-bold text-xs uppercase"
-            >
-              CHANGE FILE
-            </button>
-          </div>
+          )}
 
           <button
             onClick={handleConvert}
