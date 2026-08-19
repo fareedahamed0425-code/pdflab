@@ -10,7 +10,9 @@ import {
   CheckCircle2, 
   Lock, 
   Trash2,
-  Sparkles
+  Sparkles,
+  Github,
+  Globe
 } from 'lucide-react';
 import { ProcessedResult, ToolMode } from './types';
 import { Navbar } from './components/Navbar';
@@ -123,19 +125,52 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t-4 border-black mt-12 py-6 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-xs">
-          <div className="flex items-center gap-2 font-bold">
-            <span className="bg-black text-[#FFE600] px-2 py-0.5">RAW</span>
-            <span>PDF & MEDIA CONVERTER LAB</span>
+      <footer className="bg-white dark:bg-slate-900 border-t-4 border-black dark:border-slate-800 mt-12 py-8 px-4 transition-colors">
+        <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 font-mono">
+          {/* Main Footer Info */}
+          <div className="flex flex-col md:flex-row w-full items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2 font-bold">
+              <span className="bg-black dark:bg-white text-[#FFE600] dark:text-black px-2 py-0.5">RAW</span>
+              <span className="dark:text-white">PDF & MEDIA CONVERTER LAB</span>
+            </div>
+
+            <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400 font-bold">
+              <button onClick={() => setIsSecurityOpen(true)} className="hover:underline flex items-center gap-1">
+                <Lock className="w-3.5 h-3.5 text-emerald-600" /> PRIVACY AUDIT
+              </button>
+              <span>•</span>
+              <span>HIGH SECURITY CLIENT-SIDE ENGINE</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-600 font-bold">
-            <button onClick={() => setIsSecurityOpen(true)} className="hover:underline flex items-center gap-1">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" /> PRIVACY AUDIT
-            </button>
-            <span>•</span>
-            <span>HIGH SECURITY CLIENT-SIDE ENGINE</span>
+          {/* Developer Credits Section */}
+          <div className="flex flex-col items-center gap-5 w-full pt-6 border-t-2 border-dashed border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-4">
+              <div className="h-px w-8 sm:w-16 bg-slate-300 dark:bg-slate-700"></div>
+              <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">
+                Developed by <span className="text-black dark:text-white">B A Fareed Ahamed</span>
+              </span>
+              <div className="h-px w-8 sm:w-16 bg-slate-300 dark:bg-slate-700"></div>
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <a 
+                href="https://github.com/fareedahamed0425-code" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-950 text-black dark:text-white border-2 border-black dark:border-slate-700 font-black text-xs hover:bg-[#FFE600] hover:text-black dark:hover:bg-[#FFE600] dark:hover:text-black dark:hover:border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <Github className="w-4 h-4" /> GITHUB
+              </a>
+              <a 
+                href="https://bafareedahamedportfolio.netlify.app/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-950 text-black dark:text-white border-2 border-black dark:border-slate-700 font-black text-xs hover:bg-[#FFE600] hover:text-black dark:hover:bg-[#FFE600] dark:hover:text-black dark:hover:border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <Globe className="w-4 h-4" /> PORTFOLIO
+              </a>
+            </div>
           </div>
         </div>
       </footer>
